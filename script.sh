@@ -1,21 +1,47 @@
 #ss-panel-v3-mod_UIChanges
-#Author: marisn
+#Author: 十一
 #Blog: blog.67cc.cn
-#Time：2018-4-12 12:06:05
+#Time：2018-8-25 11:05:33
 #!/bin/bash
+[ $(id -u) != "0" ] && { echo "错误: 您必须以root用户运行此脚本"; exit 1; }
+function check_system(){
+	if [[ -f /etc/redhat-release ]]; then
+		release="centos"
+	elif cat /etc/issue | grep -q -E -i "debian"; then
+		release="debian"
+	elif cat /etc/issue | grep -q -E -i "ubuntu"; then
+		release="ubuntu"
+	elif cat /etc/issue | grep -q -E -i "centos|red hat|redhat"; then
+		release="centos"
+	elif cat /proc/version | grep -q -E -i "debian"; then
+		release="debian"
+	elif cat /proc/version | grep -q -E -i "ubuntu"; then
+		release="ubuntu"
+	elif cat /proc/version | grep -q -E -i "centos|red hat|redhat"; then
+		release="centos"
+    fi
+	bit=`uname -m`
+	if [[ ${release} = "centos" ]] && [[ ${bit} == "x86_64" ]]; then
+	echo -e "你的系统为[${release} ${bit}],检测\033[32m 可以 \033[0m搭建。"
+	else 
+	echo -e "你的系统为[${release} ${bit}],检测\033[31m 不可以 \033[0m搭建。"
+	echo -e "\033[31m 正在退出脚本... \033[0m"
+	exit 0;
+	fi
+}
 function install_ss_panel_mod_UIm(){
     yum remove httpd -y
 	yum install unzip zip git -y
-	wget -c --no-check-certificate https://raw.githubusercontent.com/echo-marisn/ss-panel-v3-mod_UIChanges-one-click-script/master/lnmp1.4.zip && unzip lnmp1.4.zip && rm -rf lnmp1.4.zip && cd lnmp1.4 && chmod +x install.sh && ./install.sh lnmp
+	wget -c --no-check-certificate https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/lnmp1.4.zip && unzip lnmp1.4.zip && rm -rf lnmp1.4.zip && cd lnmp1.4 && chmod +x install.sh && ./install.sh lnmp
 	cd /home/wwwroot/
 	cp -r default/phpmyadmin/ .  #复制数据库
 	cd default
 	rm -rf index.html
 	#克隆项目
-	git clone https://github.com/echo-marisn/ss-panel-v3-mod_Uim.git tmp && mv tmp/.git . && rm -rf tmp && git reset --hard
-	
+	git clone https://github.com/NimaQu/ss-panel-v3-mod_Uim.git tmp && mv tmp/.git . && rm -rf tmp && git reset --hard
+	wget -N -P  /home/wwwroot/default/config/ "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/.config.php"
 	#复制配置文件
-	cp config/.config.php.example config/.config.php
+	# cp config/.config.php.example config/.config.php
 	#设置文件权限
 	chattr -i .user.ini
 	mv .user.ini public
@@ -24,7 +50,7 @@ function install_ss_panel_mod_UIm(){
 	chown -R www:www storage
 	chattr +i public/.user.ini
 	#下载lnmp配置文件
-	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/echo-marisn/ss-panel-v3-mod_UIChanges-one-click-script/master/nginx.conf
+	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/nginx.conf
 	service nginx restart #重启Nginx
 	mysql -uroot -proot -e"create database sspanel;" 
 	mysql -uroot -proot -e"use sspanel;" 
@@ -70,10 +96,22 @@ function install_centos_ssr(){
 	chmod 0644 /var/swap
 	swapon /var/swap
 	echo '/var/swap   swap   swap   default 0 0' >> /etc/fstab
-	# wget https://raw.githubusercontent.com/echo-marisn/ss-panel-v3-mod_UIChanges-one-click-script/master/libsodium-1.0.13.tar.gz
-	# tar xf libsodium-1.0.13.tar.gz && cd libsodium-1.0.13
-	wget https://github.com/jedisct1/libsodium/releases/download/1.0.16/libsodium-1.0.16.tar.gz
-    tar xf libsodium-1.0.16.tar.gz && cd libsodium-1.0.16
+	#自动选择下载节点
+	GIT='raw.githubusercontent.com'
+	LIB='download.libsodium.org'
+	GIT_PING=`ping -c 1 -w 1 $GIT|grep time=|awk '{print $7}'|sed "s/time=//"`
+	LIB_PING=`ping -c 1 -w 1 $LIB|grep time=|awk '{print $7}'|sed "s/time=//"`
+	echo "$GIT_PING $GIT" > ping.pl
+	echo "$LIB_PING $LIB" >> ping.pl
+	libAddr=`sort -V ping.pl|sed -n '1p'|awk '{print $2}'`
+	if [ "$libAddr" == "$GIT" ];then
+		libAddr='https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/libsodium-1.0.13.tar.gz'
+	else
+		libAddr='https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz'
+	fi
+	rm -f ping.pl
+	wget --no-check-certificate $libAddr
+	tar xf libsodium-1.0.13.tar.gz && cd libsodium-1.0.13
 	./configure && make -j2 && make install
 	echo /usr/local/lib > /etc/ld.so.conf.d/usr_local_lib.conf
 	ldconfig
@@ -135,26 +173,10 @@ function install_RS(){
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 ulimit -c 0
-rm -rf ss*
+rm -rf script*
 clear
-echo -e "\033[33m=====================================================================\033[0m"
-echo -e "\033[33m                   一键ss-panel-v3-mod_UIChanges搭建脚本                 \033[0m"
-echo -e "\033[33m                                                                     \033[0m"
-echo -e "\033[33m                  本脚本由marisn编写，用于学习与交流！               \033[0m"                                                 
-echo -e "\033[33m                                                                     \033[0m"
-echo -e "\033[33m=====================================================================\033[0m"
-echo
-Realip=`curl -s https://tools.67cc.cn/Realip/ip.php`;
-pass='blog.67cc.cn';
-echo -e "你的IP地址是: $Realip " #检查IP
-echo -e "请输入Marisn'blog地址:[\033[32m $pass \033[0m] "
-read inputPass
-if [ "$inputPass" != "$pass" ];then
-    #网址验证
-     echo -e "\033[31m很抱歉,输入错误\033[0m";
-     exit 0;
-fi;
-clear
+check_system
+sleep 2
 echo -e "\033[31m#############################################################\033[0m"
 echo -e "\033[32m#欢迎使用一键ss-panel-v3-mod_UIChanges搭建脚本 and 节点添加 #\033[0m"
 echo -e "\033[34m#Blog: http://blog.67cc.cn/                                 #\033[0m"
