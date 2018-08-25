@@ -1,0 +1,2 @@
+# ss-panel-v3-mod_UIChanges-one-click-script
+wget -N --no-check-certificate https://raw.githubusercontent.com/echo-marisn/ss-panel-v3-mod_UIChanges-one-click-script/master/ss-panel-v3-mod_UIChanges-one-click-script.sh && chmod +x ss-panel-v3-mod_UIChanges-one-click-script.sh && bash ss-panel-v3-mod_UIChanges-one-click-script.sh
