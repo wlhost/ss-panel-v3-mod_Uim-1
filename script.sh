@@ -53,6 +53,7 @@ function install_ss_panel_mod_UIm(){
 	wget -N -P  /home/wwwroot/default/config/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/.config.php"
 	wget -N -P  /home/wwwroot/default/sql/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/sspanel.sql"
 	wget -N -P /usr/local/php/etc/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/php.ini"
+	wget -N -P /home/wwwroot/default/resources/views/material/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/staff.tpl"
 	service nginx restart #重启Nginx
 	# mysql -uroot -proot -e"create database sspanel;" 
 	# mysql -uroot -proot -e"use sspanel;" 
