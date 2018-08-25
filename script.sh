@@ -39,7 +39,6 @@ function install_ss_panel_mod_UIm(){
 	rm -rf index.html
 	#克隆项目
 	git clone https://github.com/NimaQu/ss-panel-v3-mod_Uim.git tmp && mv tmp/.git . && rm -rf tmp && git reset --hard
-	wget -N -P  /home/wwwroot/default/config/ "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/.config.php"
 	#复制配置文件
 	# cp config/.config.php.example config/.config.php
 	#设置文件权限
@@ -49,9 +48,11 @@ function install_ss_panel_mod_UIm(){
 	chmod -R 777 *
 	chown -R www:www storage
 	chattr +i public/.user.ini
-	#下载lnmp配置文件
+	#下载配置文件
 	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/nginx.conf"
+	wget -N -P  /home/wwwroot/default/config/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/.config.php"
 	wget -N -P  /home/wwwroot/default/sql/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/sspanel.sql"
+	wget -N -P /usr/local/php/etc/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/php.ini"
 	service nginx restart #重启Nginx
 	# mysql -uroot -proot -e"create database sspanel;" 
 	# mysql -uroot -proot -e"use sspanel;" 
@@ -78,13 +79,11 @@ EOF
 	rm -rf /var/spool/cron/root
 	echo 'SHELL=/bin/bash' >> /var/spool/cron/root
 	echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin' >> /var/spool/cron/root
+	echo '*/20 * * * * /usr/sbin/ntpdate pool.ntp.org > /dev/null 2>&1' >> /var/spool/cron/root
 	echo '0 0 * * * php -n /home/wwwroot/default/xcat dailyjob' >> /var/spool/cron/root
 	echo '*/1 * * * * php /home/wwwroot/default/xcat checkjob' >> /var/spool/cron/root
-	echo "*/1 * * * * php /home/wwwroot/default/xcat synclogin" >> /var/spool/cron/root
-	echo "*/1 * * * * php /home/wwwroot/default/xcat syncvpn" >> /var/spool/cron/root
-	echo '*/20 * * * * /usr/sbin/ntpdate pool.ntp.org > /dev/null 2>&1' >> /var/spool/cron/root
+	echo "*/1 * * * * php /home/wwwroot/default/xcat syncnode" >> /var/spool/cron/root
 	echo '30 22 * * * php /home/wwwroot/default/xcat sendDiaryMail' >> /var/spool/cron/root
-	echo '*/1 * * * * php -n /home/wwwroot/default/xcat syncnas' >> /var/spool/cron/root
 	/sbin/service crond restart
 	if [ -d "/home/wwwroot/default/" ];then
 	clear
