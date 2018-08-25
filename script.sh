@@ -50,11 +50,19 @@ function install_ss_panel_mod_UIm(){
 	chown -R www:www storage
 	chattr +i public/.user.ini
 	#下载lnmp配置文件
-	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/nginx.conf
+	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/nginx.conf"
+	wget -N -P  /home/wwwroot/default/sql/ --no-check-certificate "https://raw.githubusercontent.com/marisn2017/ss-panel-v3-mod_Uim/master/sspanel.sql"
 	service nginx restart #重启Nginx
-	mysql -uroot -proot -e"create database sspanel;" 
-	mysql -uroot -proot -e"use sspanel;" 
-	mysql -uroot -proot sspanel < /home/wwwroot/default/sql/sspanel.sql
+	# mysql -uroot -proot -e"create database sspanel;" 
+	# mysql -uroot -proot -e"use sspanel;" 
+	# mysql -uroot -proot sspanel < /home/wwwroot/default/sql/sspanel.sql
+	mysql -hlocalhost -uroot -proot --default-character-set=utf8mb4<<EOF
+create database ssrpanel;
+use ssrpanel;
+source /home/wwwroot/default/sql/sspanel.sql;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
+flush privileges;
+EOF
 	cd /home/wwwroot/default
 	#安装composer
 	php composer.phar install
